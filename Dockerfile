@@ -9,6 +9,9 @@ ENV CARGO_NEAR_NO_REPRODUCIBLE=true
 RUN apt-get update \
     && apt-get install -y --no-install-recommends curl \
     && rm -rf /var/lib/apt/lists/*
+    
+# Install the wasm32-unknown-unknown target
+RUN rustup target add wasm32-unknown-unknown
 
 # Install cargo-near using the installer script
 RUN curl --proto '=https' --tlsv1.2 -LsSf https://github.com/near/cargo-near/releases/download/cargo-near-v0.6.0/cargo-near-installer.sh | sh

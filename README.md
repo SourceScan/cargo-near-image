@@ -9,7 +9,7 @@ The `sourcescan/cargo-near` Docker image is designed for reproducible Rust build
 ### Base Image
 
 - **Image:** `amd64/rust:1.75-slim`
-- **URL:** [https://hub.docker.com/_/rust?tab=tags&page=1&name=1.75-slim](https://hub.docker.com/_/rust?tab=tags&page=1&name=1.75-slim)
+- **URL:** [https://hub.docker.com/layers/amd64/rust/1.75-slim](https://hub.docker.com/layers/amd64/rust/1.75-slim/images/sha256-e7ec82832d1ecd4fb18f7f422631df20b3c026fe5b8910a69a59df0b1436047f?context=explore)
 
 ### Environment Variables
 

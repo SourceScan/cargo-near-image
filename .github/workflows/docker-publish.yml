@@ -17,15 +17,15 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Build Docker image
-        run: docker build -t rust-builder .
+        run: docker build -t cargo-near .
 
       - name: Run tests in Docker container
-        run: docker run --name rust-builder-container -v ${{ github.workspace }}/reproducible-test:/host rust-builder /bin/bash /host/test.sh
+        run: docker run --name cargo-near-container -v ${{ github.workspace }}/reproducible-test:/host cargo-near /bin/bash /host/test.sh
 
       - name: Calculate SHA hash of build output
         id: hash_output
         run: |
-          docker cp rust-builder-container:/host/target/near/. /tmp/output1
+          docker cp cargo-near-container:/host/target/near/. /tmp/output1
           wasm_file=$(ls /tmp/output1/*.wasm | head -n 1)
           if [ -z "$wasm_file" ]; then
             echo "No WASM file found."
@@ -44,15 +44,15 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Build Docker image
-        run: docker build -t rust-builder .
+        run: docker build -t cargo-near .
 
       - name: Run tests in Docker container
-        run: docker run --name rust-builder-container -v ${{ github.workspace }}/reproducible-test:/host rust-builder /bin/bash /host/test.sh
+        run: docker run --name cargo-near-container -v ${{ github.workspace }}/reproducible-test:/host cargo-near /bin/bash /host/test.sh
 
       - name: Calculate SHA hash of build output
         id: hash_output
         run: |
-          docker cp rust-builder-container:/host/target/near/. /tmp/output1
+          docker cp cargo-near-container:/host/target/near/. /tmp/output1
           wasm_file=$(ls /tmp/output1/*.wasm | head -n 1)
           if [ -z "$wasm_file" ]; then
             echo "No WASM file found."

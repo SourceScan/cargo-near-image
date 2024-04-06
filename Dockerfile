@@ -10,6 +10,8 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends curl \
     && rm -rf /var/lib/apt/lists/*
 
+# Set the default Rust version to 1.75.0
+RUN rustup default 1.75.0
 # Install the wasm32-unknown-unknown target
 RUN rustup target add wasm32-unknown-unknown
 

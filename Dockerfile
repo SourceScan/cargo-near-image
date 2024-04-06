@@ -16,6 +16,7 @@ USER builder
 
 # Set up the environment for the builder user with Rust-specific configurations
 ENV HOME=/home/builder \
+    RUSTUP_TOOLCHAIN=1.75 \
     RUSTFLAGS='-C link-arg=-s' \
     CARGO_NEAR_NO_REPRODUCIBLE=true \
     CARGO_HOME=/home/builder/.cargo \

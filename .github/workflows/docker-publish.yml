@@ -20,7 +20,7 @@ jobs:
         run: docker build -t cargo-near .
 
       - name: Run tests in Docker container
-        run: docker run --name cargo-near-container -v ${{ github.workspace }}/reproducible-test:/host cargo-near $(id -u) $(id -g) $(whoami) /bin/bash /host/test.sh
+        run: docker run --name cargo-near-container -v ${{ github.workspace }}/reproducible-test:/host cargo-near --uid $(id -u) --gid $(id -g) --run /host/test.sh
 
       - name: Calculate SHA hash of build output
         id: hash_output
@@ -47,7 +47,7 @@ jobs:
         run: docker build -t cargo-near .
 
       - name: Run tests in Docker container
-        run: docker run --name cargo-near-container -v ${{ github.workspace }}/reproducible-test:/host cargo-near $(id -u) $(id -g) $(whoami) /bin/bash /host/test.sh
+        run: docker run --name cargo-near-container -v ${{ github.workspace }}/reproducible-test:/host cargo-near --uid $(id -u) --gid $(id -g) --run /host/test.sh
 
       - name: Calculate SHA hash of build output
         id: hash_output

@@ -1,26 +1,25 @@
 # Start with Debian slim image as the base
 FROM amd64/debian:stable-slim
 
-# Install system dependencies and create a non-root user 'builder'
+# Install system dependencies and create a non-root user 'near'
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
        curl \
        build-essential \
        ca-certificates \
     && rm -rf /var/lib/apt/lists/* \
-    && groupadd -g 1000 builder \
-    && useradd -m -d /home/builder -s /bin/bash -g builder -u 1000 builder
+    && groupadd -g 1000 near \
+    && useradd -m -d /home/near -s /bin/bash -g near -u 1000 near
 
 # Switch to the builder user
-USER builder
+USER near
 
-# Set up the environment for the builder user with Rust-specific configurations
-ENV HOME=/home/builder \
+# Set up the environment for the near user with Rust-specific configurations
+ENV HOME=/home/near \
     RUSTUP_TOOLCHAIN=1.75 \
     RUSTFLAGS='-C link-arg=-s' \
-    CARGO_NEAR_NO_REPRODUCIBLE=true \
-    CARGO_HOME=/home/builder/.cargo \
-    RUSTUP_HOME=/home/builder/.rustup
+    CARGO_HOME=/home/near/.cargo \
+    RUSTUP_HOME=/home/near/.rustup
 
 # Install Rust using rustup with a specific version, add the wasm target, install cargo-near, and set directory permissions
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- --profile minimal --default-toolchain 1.75.0 -y \

@@ -8,18 +8,37 @@ The `sourcescan/cargo-near` Docker image is designed for reproducible Rust build
 
 ### Base Image
 
-- **Image:** `amd64/rust:1.75-slim`
-- **URL:** [https://hub.docker.com/layers/amd64/rust/1.75-slim](https://hub.docker.com/layers/amd64/rust/1.75-slim/images/sha256-e7ec82832d1ecd4fb18f7f422631df20b3c026fe5b8910a69a59df0b1436047f?context=explore)
+- **Image:** `amd64/debian:stable-slim`
+- **URL:** [https://hub.docker.com/_/debian](https://hub.docker.com/_/debian)
+
+### System Dependencies
+
+- **Dependencies:** `curl`, `build-essential`, `ca-certificates`
+  - These are essential tools and libraries for building and compiling Rust projects.
 
 ### Environment Variables
 
+- `RUST_VERSION=1.75.0`
+  - Specifies the Rust version to be installed and used.
 - `RUSTFLAGS='-C link-arg=-s'`
-  - This flag configures rustc to pass the `-s` argument to the linker, stripping symbols from the compiled binary. This helps reduce the size of the final binary and is a common practice for optimizing Rust binaries for release.
+  - Configures rustc to pass the `-s` argument to the linker, stripping symbols from the compiled binary to reduce the size of the final binary.
 - `CARGO_NEAR_NO_REPRODUCIBLE=true`
-  - This environment variable disables reproducible builds in `cargo-near`.
+  - Disables reproducible builds in `cargo-near`.
+- `CARGO_HOME=/home/builder/.cargo`
+  - Specifies the Cargo home directory.
+- `RUSTUP_HOME=/home/builder/.rustup`
+  - Specifies the Rustup home directory.
+
+### User Configuration
+
+- **User:** `builder`
+  - A non-root user created to enhance security and avoid running builds as the root user.
+- **User ID:** `1000`
+- **Group ID:** `1000`
 
 ### Additional Tools
 
 - **cargo-near**
   - **Version:** v0.6.0
   - **URL:** [https://github.com/near/cargo-near/releases/tag/cargo-near-v0.6.0](https://github.com/near/cargo-near/releases/tag/cargo-near-v0.6.0)
+  - Installed via a script for ease of use.

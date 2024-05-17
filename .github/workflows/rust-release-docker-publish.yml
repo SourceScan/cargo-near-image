@@ -49,6 +49,14 @@ jobs:
         with:
           ref: main
 
+      - name: Extract cargo-near version from Dockerfile
+        id: get_cargo_near_version
+        run: |
+          cargo_near_version=$(grep 'ARG CARGO_NEAR_VERSION=' Dockerfile | cut -d '=' -f2)
+          echo "cargo_near_version=$cargo_near_version" >> $GITHUB_ENV
+          echo "cargo_near_version=$cargo_near_version"
+          echo "cargo_near_version=$cargo_near_version" >> $GITHUB_OUTPUT
+
       - name: Build Docker image
         run: docker build -t cargo-near:${{ needs.check_rust_release.outputs.rust_version }} --build-arg RUST_VERSION=${{ needs.check_rust_release.outputs.rust_version }} .
 
@@ -63,5 +71,5 @@ jobs:
 
       - name: Push Docker image to Docker Hub
         run: |
-          docker tag cargo-near:${{ needs.check_rust_release.outputs.rust_version }} sourcescan/cargo-near:rust-${{ needs.check_rust_release.outputs.rust_version }}
-          docker push sourcescan/cargo-near:rust-${{ needs.check_rust_release.outputs.rust_version }}
+          docker tag cargo-near:${{ needs.check_rust_release.outputs.rust_version }} sourcescan/cargo-near:${{ steps.get_cargo_near_version.outputs.cargo_near_version }}-rust-${{ needs.check_rust_release.outputs.rust_version }}
+          docker push sourcescan/cargo-near:${{ steps.get_cargo_near_version.outputs.cargo_near_version }}-rust-${{ needs.check_rust_release.outputs.rust_version }}

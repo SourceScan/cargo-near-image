@@ -29,7 +29,8 @@ RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- --profi
 # Ensure the Rust and Cargo binaries are in the PATH for easy command-line access
 ENV PATH="$CARGO_HOME/bin:$PATH"
 
+ARG CARGO_NEAR_VERSION=0.6.0
 # Continuation of the Rust setup: adding the wasm target for WebAssembly development and installing cargo-near for NEAR protocol development, followed by setting appropriate permissions for the builder's home directory
 RUN rustup target add wasm32-unknown-unknown \
-    && curl --proto '=https' --tlsv1.2 -LsSf https://github.com/near/cargo-near/releases/download/cargo-near-v0.6.0/cargo-near-installer.sh | sh \
+    && curl --proto '=https' --tlsv1.2 -LsSf https://github.com/near/cargo-near/releases/download/cargo-near-v$CARGO_NEAR_VERSION/cargo-near-installer.sh | sh \
     && chmod -R a+rwx $HOME

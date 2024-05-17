@@ -15,15 +15,16 @@ RUN apt-get update \
 USER builder
 
 # Set up the environment for the builder user with Rust-specific configurations
+ARG RUST_VERSION=1.75.0
 ENV HOME=/home/builder \
-    RUSTUP_TOOLCHAIN=1.75 \
+    RUSTUP_TOOLCHAIN=$RUST_VERSION \
     RUSTFLAGS='-C link-arg=-s' \
     CARGO_NEAR_NO_REPRODUCIBLE=true \
     CARGO_HOME=/home/builder/.cargo \
     RUSTUP_HOME=/home/builder/.rustup
 
-# Install Rust using rustup with a specific version, add the wasm target, install cargo-near, and set directory permissions
-RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- --profile minimal --default-toolchain 1.75.0 -y \
+# Install Rust using rustup with the specified version, add the wasm target, install cargo-near, and set directory permissions
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- --profile minimal --default-toolchain $RUST_VERSION -y \
     && chmod -R a+rwx $CARGO_HOME $RUSTUP_HOME
 
 # Ensure the Rust and Cargo binaries are in the PATH for easy command-line access

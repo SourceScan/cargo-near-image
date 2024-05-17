@@ -19,11 +19,9 @@ The `sourcescan/cargo-near` Docker image is designed for reproducible Rust build
 ### Environment Variables
 
 - `RUST_VERSION=1.75.0`
-  - Specifies the Rust version to be installed and used.
+  - Arg that specifies the Rust version to be installed and used. Default is 1.75.0
 - `RUSTFLAGS='-C link-arg=-s'`
   - Configures rustc to pass the `-s` argument to the linker, stripping symbols from the compiled binary to reduce the size of the final binary.
-- `CARGO_NEAR_NO_REPRODUCIBLE=true`
-  - Disables reproducible builds in `cargo-near`.
 - `CARGO_HOME=/home/builder/.cargo`
   - Specifies the Cargo home directory.
 - `RUSTUP_HOME=/home/builder/.rustup`
@@ -31,7 +29,7 @@ The `sourcescan/cargo-near` Docker image is designed for reproducible Rust build
 
 ### User Configuration
 
-- **User:** `builder`
+- **User:** `near`
   - A non-root user created to enhance security and avoid running builds as the root user.
 - **User ID:** `1000`
 - **Group ID:** `1000`

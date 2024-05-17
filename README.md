@@ -20,6 +20,8 @@ The `sourcescan/cargo-near` Docker image is designed for reproducible Rust build
 
 - `RUST_VERSION=1.75.0`
   - Arg that specifies the Rust version to be installed and used. Default is 1.75.0
+- `CARGO_NEAR_VERSION=0.6.0`
+  - Arg that specifies the cargo-near version to be installed and used. Default is 0.6.0
 - `RUSTFLAGS='-C link-arg=-s'`
   - Configures rustc to pass the `-s` argument to the linker, stripping symbols from the compiled binary to reduce the size of the final binary.
 - `CARGO_HOME=/home/builder/.cargo`

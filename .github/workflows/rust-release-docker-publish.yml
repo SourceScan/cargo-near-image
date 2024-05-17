@@ -11,6 +11,7 @@ jobs:
 
     outputs:
       rust_version: ${{ steps.get_rust_version.outputs.latest_version }}
+      cargo_near_version: ${{ steps.get_cargo_near_version.outputs.cargo_near_version }}
 
     steps:
       - name: Check out the main branch
@@ -27,15 +28,23 @@ jobs:
           echo "latest_version=$latest_version"
           echo "latest_version=$latest_version" >> $GITHUB_OUTPUT
 
+      - name: Extract cargo-near version from Dockerfile
+        id: get_cargo_near_version
+        run: |
+          cargo_near_version=$(grep 'ARG CARGO_NEAR_VERSION=' Dockerfile | cut -d '=' -f2)
+          echo "cargo_near_version=$cargo_near_version" >> $GITHUB_ENV
+          echo "cargo_near_version=$cargo_near_version"
+          echo "cargo_near_version=$cargo_near_version" >> $GITHUB_OUTPUT
+
       - name: Check if Docker image with the tag exists
         id: check_docker_image
         run: |
-          tag_exists=$(curl -s -o /dev/null -w "%{http_code}" https://hub.docker.com/v2/repositories/sourcescan/cargo-near/tags/rust-${{ steps.get_rust_version.outputs.latest_version }})
+          tag_exists=$(curl -s -o /dev/null -w "%{http_code}" https://hub.docker.com/v2/repositories/sourcescan/cargo-near/tags/${{ steps.get_cargo_near_version.outputs.cargo_near_version }}-rust-${{ steps.get_rust_version.outputs.latest_version }})
           if [ "$tag_exists" -eq 200 ]; then
-            echo "Docker image with tag rust-${{ steps.get_rust_version.outputs.latest_version }} already exists."
+            echo "Docker image with tag ${{ steps.get_cargo_near_version.outputs.cargo_near_version }}-rust-${{ steps.get_rust_version.outputs.latest_version }} already exists."
             exit 1
           else
-            echo "Docker image with tag rust-${{ steps.get_rust_version.outputs.latest_version }} does not exist."
+            echo "Docker image with tag ${{ steps.get_cargo_near_version.outputs.cargo_near_version }}-rust-${{ steps.get_rust_version.outputs.latest_version }} does not exist."
           fi
 
   build_and_push:
@@ -49,16 +58,8 @@ jobs:
         with:
           ref: main
 
-      - name: Extract cargo-near version from Dockerfile
-        id: get_cargo_near_version
-        run: |
-          cargo_near_version=$(grep 'ARG CARGO_NEAR_VERSION=' Dockerfile | cut -d '=' -f2)
-          echo "cargo_near_version=$cargo_near_version" >> $GITHUB_ENV
-          echo "cargo_near_version=$cargo_near_version"
-          echo "cargo_near_version=$cargo_near_version" >> $GITHUB_OUTPUT
-
       - name: Build Docker image
-        run: docker build -t cargo-near:${{ needs.check_rust_release.outputs.rust_version }} --build-arg RUST_VERSION=${{ needs.check_rust_release.outputs.rust_version }} .
+        run: docker build -t cargo-near:${{ needs.check_rust_release.outputs.rust_version }} --build-arg RUST_VERSION=${{ needs.check_rust_release.outputs.rust_version }} --build-arg CARGO_NEAR_VERSION=${{ needs.check_rust_release.outputs.cargo_near_version }} .
 
       - name: Run tests in Docker container
         run: docker run -u $(id -u):$(id -g) --name cargo-near-container -v ${{ github.workspace }}/reproducible-test:/host cargo-near:${{ needs.check_rust_release.outputs.rust_version }} /bin/bash -c "/host/test.sh"
@@ -71,5 +72,5 @@ jobs:
 
       - name: Push Docker image to Docker Hub
         run: |
-          docker tag cargo-near:${{ needs.check_rust_release.outputs.rust_version }} sourcescan/cargo-near:${{ steps.get_cargo_near_version.outputs.cargo_near_version }}-rust-${{ needs.check_rust_release.outputs.rust_version }}
-          docker push sourcescan/cargo-near:${{ steps.get_cargo_near_version.outputs.cargo_near_version }}-rust-${{ needs.check_rust_release.outputs.rust_version }}
+          docker tag cargo-near:${{ needs.check_rust_release.outputs.rust_version }} sourcescan/cargo-near:${{ needs.check_rust_release.outputs.cargo_near_version }}-rust-${{ needs.check_rust_release.outputs.rust_version }}
+          docker push sourcescan/cargo-near:${{ needs.check_rust_release.outputs.cargo_near_version }}-rust-${{ needs.check_rust_release.outputs.rust_version }}

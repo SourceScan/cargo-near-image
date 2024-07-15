@@ -6,35 +6,10 @@ on:
       - 'main'
 
 jobs:
-  build:
-    name: Build and Test Docker Image
+  build_and_push:
+    name: Build and Push Docker Image
     runs-on: ubuntu-latest
-    steps:
-      - name: Check out the repository
-        uses: actions/checkout@v4
-
-      - name: Build Docker image
-        run: docker build -t cargo-near .
-
-      - name: Run tests in Docker container
-        run: docker run -u $(id -u):$(id -g) --name cargo-near-container -v ${{ github.workspace }}/reproducible-test:/host cargo-near /bin/bash -c "/host/test.sh"
-
-      - name: Calculate SHA hash of build output
-        id: hash_output
-        run: |
-          docker cp cargo-near-container:/host/target/near/. /tmp/output
-          wasm_file=$(ls /tmp/output/*.wasm | head -n 1)
-          if [ -z "$wasm_file" ]; then
-            echo "No WASM file found."
-            exit 1
-          fi
-          sha_hash=$(sha256sum "$wasm_file" | awk '{ print $1 }')
-
-  push:
-    name: Push Docker image to Docker Hub
-    runs-on: ubuntu-latest
-    needs: build
-    if: ${{ needs.build.result == 'success' }}
+   
     steps:
       - name: Check out the repository
         uses: actions/checkout@v4

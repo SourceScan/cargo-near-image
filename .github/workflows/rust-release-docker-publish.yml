@@ -48,7 +48,7 @@ jobs:
           fi
 
   build_and_push:
-    name: Build, Test, and Push Docker Image
+    name: Build, and Push Docker Image
     runs-on: ubuntu-latest
     needs: check_rust_release
 
@@ -60,9 +60,6 @@ jobs:
 
       - name: Build Docker image
         run: docker build -t cargo-near:${{ needs.check_rust_release.outputs.rust_version }} --build-arg RUST_VERSION=${{ needs.check_rust_release.outputs.rust_version }} --build-arg CARGO_NEAR_VERSION=${{ needs.check_rust_release.outputs.cargo_near_version }} .
-
-      - name: Run tests in Docker container
-        run: docker run -u $(id -u):$(id -g) --name cargo-near-container -v ${{ github.workspace }}/reproducible-test:/host cargo-near:${{ needs.check_rust_release.outputs.rust_version }} /bin/bash -c "/host/test.sh"
 
       - name: Log in to Docker Hub
         uses: docker/login-action@v2

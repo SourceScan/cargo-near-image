@@ -7,9 +7,6 @@ RUN apt-get update \
        curl \
        build-essential \
        ca-certificates \
-       pkg-config \
-       libudev-dev \
-       git \
     && rm -rf /var/lib/apt/lists/* \
     && groupadd -g 1000 near \
     && useradd -m -d /home/near -s /bin/bash -g near -u 1000 near
@@ -25,21 +22,15 @@ ENV HOME=/home/near \
     CARGO_HOME=/home/near/.cargo \
     RUSTUP_HOME=/home/near/.rustup
 
-# Install Rust using rustup with a specific version and add the wasm target
-RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- --profile minimal --default-toolchain $RUST_VERSION -y
+# Install Rust using rustup with a specific version, add the wasm target, install cargo-near, and set directory permissions
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- --profile minimal --default-toolchain $RUST_VERSION -y \
+    && chmod -R a+rwx $CARGO_HOME $RUSTUP_HOME
 
 # Ensure the Rust and Cargo binaries are in the PATH for easy command-line access
 ENV PATH="$CARGO_HOME/bin:$PATH"
 
-# Clone the cargo-near repository and install cargo-near
-ARG CARGO_NEAR_COMMIT=a04e05ea700cecdaba0d29f54db8820055a65d0d
-
-# Add the wasm32-unknown-unknown target and install cargo-near
-RUN rustup target add wasm32-unknown-unknown && \
-    git clone https://github.com/near/cargo-near.git /home/near/cargo-near \
-    && cd /home/near/cargo-near && git checkout $CARGO_NEAR_COMMIT \
-    && cd /home/near/cargo-near/cargo-near && cargo install --path . --locked \
-    && rm -rf /home/near/cargo-near /home/near/.cargo/registry/cache
-
-# Set appropriate permissions at the end
-RUN chmod -R a+rwx $HOME
+ARG CARGO_NEAR_VERSION=0.6.3
+# Continuation of the Rust setup: adding the wasm target for WebAssembly development and installing cargo-near for NEAR protocol development, followed by setting appropriate permissions for the builder's home directory
+RUN rustup target add wasm32-unknown-unknown \
+    && curl --proto '=https' --tlsv1.2 -LsSf https://github.com/near/cargo-near/releases/download/cargo-near-v$CARGO_NEAR_VERSION/cargo-near-installer.sh | sh \
+    && chmod -R a+rwx $HOME

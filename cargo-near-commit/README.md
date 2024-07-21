@@ -13,15 +13,13 @@ The `sourcescan/cargo-near` Docker image is designed for reproducible Rust build
 
 ### System Dependencies
 
-- **Dependencies:** `curl`, `build-essential`, `ca-certificates`
-  - These are essential tools and libraries for building and compiling Rust projects.
+- **Dependencies:** `curl`, `build-essential`, `ca-certificates`, `pkg-config`, `libudev-dev`, `git`
+  - These are essential tools and libraries for building and compiling Rust projects, as well as managing package configurations and git repositories.
 
 ### Environment Variables
 
 - `RUST_VERSION=1.79.0`
   - Arg that specifies the Rust version to be installed and used. Default is 1.79.0.
-- `CARGO_NEAR_VERSION=0.6.3`
-  - Arg that specifies the cargo-near version to be installed and used. Default is 0.6.3.
 - `RUSTFLAGS='-C link-arg=-s'`
   - Configures rustc to pass the `-s` argument to the linker, stripping symbols from the compiled binary to reduce the size of the final binary.
 - `CARGO_HOME=/home/near/.cargo`
@@ -39,6 +37,6 @@ The `sourcescan/cargo-near` Docker image is designed for reproducible Rust build
 ### Additional Tools
 
 - **cargo-near**
-  - **Version:** v0.6.3
-  - **URL:** [https://github.com/near/cargo-near/releases/tag/cargo-near-v0.6.3](https://github.com/near/cargo-near/releases/tag/cargo-near-v0.6.3)
-  - Installed via a script.
+  - **Commit:** a04e05ea700cecdaba0d29f54db8820055a65d0d
+  - **Repository:** [https://github.com/near/cargo-near](https://github.com/near/cargo-near)
+  - Cloned and installed from the specified commit for consistency and control over the exact version used.

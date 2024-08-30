@@ -20,10 +20,19 @@ jobs:
         with:
           ref: main
 
+      - name: Downaload stable rust release channel manifest
+        run: curl -o channel-rust-stable.toml -sSL https://static.rust-lang.org/dist/channel-rust-stable.toml
+
+      - name: Apply yq filter on downloaded rust manifest 
+        id: get_rust_version_string_from_toml
+        uses: mikefarah/yq@master
+        with:
+          cmd:  yq -oy -p toml '.pkg.rust.version' channel-rust-stable.toml
+
       - name: Get latest Rust version
         id: get_rust_version
         run: |
-          latest_version=$(curl -s https://api.github.com/repos/rust-lang/rust/releases/latest | jq -r '.tag_name')
+          latest_version=$(echo "${{ steps.get_rust_version_string_from_toml.outputs.result }}" |  cut -d' ' -f1)
           latest_version=${latest_version#v}  # Remove 'v' prefix if exists
           echo "latest_version=$latest_version" >> $GITHUB_ENV
           echo "latest_version=$latest_version"

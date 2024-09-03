@@ -41,7 +41,7 @@ jobs:
       - name: Get latest cargo-near version
         id: get_cargo_near_version
         run: |
-          latest_version=$(curl -s https://api.github.com/repos/near/cargo-near/releases/latest | jq -r '.tag_name')
+          latest_version=$(curl -s https://api.github.com/repos/near/cargo-near/releases | jq -r '.[] | .tag_name' | grep -v build | grep cargo-near | head -n 1)
           latest_version=${latest_version#cargo-near-v}  # Remove 'cargo-near-v' prefix if exists
           echo "latest_version=$latest_version" >> $GITHUB_ENV
           echo "latest_version=$latest_version"

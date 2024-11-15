@@ -21,7 +21,6 @@ USER near
 ARG RUST_VERSION=1.79.0
 ENV HOME=/home/near \
     RUSTUP_TOOLCHAIN=$RUST_VERSION \
-    RUSTFLAGS='-C link-arg=-s' \
     CARGO_HOME=/home/near/.cargo \
     RUSTUP_HOME=/home/near/.rustup
 

@@ -7,6 +7,7 @@ RUN apt-get update \
        curl \
        build-essential \
        ca-certificates \
+       clang \
     && rm -rf /var/lib/apt/lists/* \
     && groupadd -g 1000 near \
     && useradd -m -d /home/near -s /bin/bash -g near -u 1000 near

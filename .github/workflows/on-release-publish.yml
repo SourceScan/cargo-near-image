@@ -29,11 +29,12 @@ jobs:
         with:
           cmd:  yq -oy -p toml '.pkg.rust.version' channel-rust-stable.toml
 
-      - name: Get latest Rust version
+      - name: Get latest Rust version (pinned to constant)
         id: get_rust_version
         run: |
-          latest_version=$(echo "${{ steps.get_rust_version_string_from_toml.outputs.result }}" |  cut -d' ' -f1)
-          latest_version=${latest_version#v}  # Remove 'v' prefix if exists
+          # latest_version=$(echo "${{ steps.get_rust_version_string_from_toml.outputs.result }}" |  cut -d' ' -f1)
+          # latest_version=${latest_version#v}  # Remove 'v' prefix if exists
+          latest_version=1.86.0
           echo "latest_version=$latest_version" >> $GITHUB_ENV
           echo "latest_version=$latest_version"
           echo "latest_version=$latest_version" >> $GITHUB_OUTPUT

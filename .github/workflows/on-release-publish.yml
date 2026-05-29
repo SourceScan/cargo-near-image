@@ -34,7 +34,7 @@ jobs:
         run: |
           # latest_version=$(echo "${{ steps.get_rust_version_string_from_toml.outputs.result }}" |  cut -d' ' -f1)
           # latest_version=${latest_version#v}  # Remove 'v' prefix if exists
-          latest_version=1.86.0
+          latest_version=1.93.0
           echo "latest_version=$latest_version" >> $GITHUB_ENV
           echo "latest_version=$latest_version"
           echo "latest_version=$latest_version" >> $GITHUB_OUTPUT

@@ -3,6 +3,12 @@ name: Publish docker image on Rust and cargo-near release
 on:
   schedule:
     - cron: '0 0 * * *'
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/on-release-publish.yml'
+      - 'Dockerfile'
   workflow_dispatch:
     inputs:
       rust_version:

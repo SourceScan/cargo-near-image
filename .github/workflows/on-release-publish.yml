@@ -2,8 +2,22 @@ name: Publish docker image on Rust and cargo-near release
 
 on:
   schedule:
-    - cron: '0 0 * * *'  # Runs daily at midnight
+    - cron: '0 0 * * *'
   workflow_dispatch:
+    inputs:
+      rust_version:
+        description: 'Optional Rust version, for example 1.96.0. Defaults to latest stable.'
+        required: false
+      cargo_near_version:
+        description: 'Optional cargo-near version, for example 0.21.1. Defaults to latest release.'
+        required: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cargo-near-image-release-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
   check_releases:
@@ -12,51 +26,90 @@ jobs:
     outputs:
       rust_version: ${{ steps.get_rust_version.outputs.latest_version }}
       cargo_near_version: ${{ steps.get_cargo_near_version.outputs.latest_version }}
+      image_tag: ${{ steps.image_tag.outputs.image_tag }}
       image_exists: ${{ steps.check_docker_image.outputs.image_exists }}
 
     steps:
-      - name: Check out the main branch
-        uses: actions/checkout@v4
-        with:
-          ref: main
-
-      - name: Downaload stable rust release channel manifest
-        run: curl -o channel-rust-stable.toml -sSL https://static.rust-lang.org/dist/channel-rust-stable.toml
-
-      - name: Apply yq filter on downloaded rust manifest 
-        id: get_rust_version_string_from_toml
-        uses: mikefarah/yq@master
-        with:
-          cmd:  yq -oy -p toml '.pkg.rust.version' channel-rust-stable.toml
-
-      - name: Get latest Rust version (pinned to constant)
+      - name: Get Rust version
         id: get_rust_version
+        env:
+          REQUESTED_RUST_VERSION: ${{ github.event.inputs.rust_version || '' }}
         run: |
-          # latest_version=$(echo "${{ steps.get_rust_version_string_from_toml.outputs.result }}" |  cut -d' ' -f1)
-          # latest_version=${latest_version#v}  # Remove 'v' prefix if exists
-          latest_version=1.93.0
-          echo "latest_version=$latest_version" >> $GITHUB_ENV
-          echo "latest_version=$latest_version"
-          echo "latest_version=$latest_version" >> $GITHUB_OUTPUT
+          set -euo pipefail
 
-      - name: Get latest cargo-near version
+          if [ -n "$REQUESTED_RUST_VERSION" ]; then
+            latest_version="$REQUESTED_RUST_VERSION"
+          else
+            curl -fsSL https://static.rust-lang.org/dist/channel-rust-stable.toml -o channel-rust-stable.toml
+            latest_version="$(
+              awk -F'"' '
+                $0 == "[pkg.rust]" { in_rust = 1; next }
+                in_rust && /^version = / { split($2, parts, " "); print parts[1]; exit }
+              ' channel-rust-stable.toml
+            )"
+          fi
+
+          if ! printf '%s' "$latest_version" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "Rust version must be a full version like 1.96.0, got: $latest_version"
+            exit 1
+          fi
+
+          echo "latest_version=$latest_version" >> "$GITHUB_OUTPUT"
+          echo "Rust version: $latest_version"
+
+      - name: Get cargo-near version
         id: get_cargo_near_version
+        env:
+          REQUESTED_CARGO_NEAR_VERSION: ${{ github.event.inputs.cargo_near_version || '' }}
         run: |
-          latest_version=$(curl -s https://api.github.com/repos/near/cargo-near/releases | jq -r '.[] | .tag_name' | grep -v build | grep cargo-near | head -n 1)
-          latest_version=${latest_version#cargo-near-v}  # Remove 'cargo-near-v' prefix if exists
-          echo "latest_version=$latest_version" >> $GITHUB_ENV
-          echo "latest_version=$latest_version"
-          echo "latest_version=$latest_version" >> $GITHUB_OUTPUT
+          set -euo pipefail
+
+          if [ -n "$REQUESTED_CARGO_NEAR_VERSION" ]; then
+            latest_version="$REQUESTED_CARGO_NEAR_VERSION"
+          else
+            tag_name="$(curl -fsSL https://api.github.com/repos/near/cargo-near/releases/latest | jq -r '.tag_name')"
+            latest_version="${tag_name#cargo-near-v}"
+          fi
+
+          if ! printf '%s' "$latest_version" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "cargo-near version must be a full version like 0.21.1, got: $latest_version"
+            exit 1
+          fi
+
+          echo "latest_version=$latest_version" >> "$GITHUB_OUTPUT"
+          echo "cargo-near version: $latest_version"
+
+      - name: Build image tag
+        id: image_tag
+        run: |
+          image_tag="${{ steps.get_cargo_near_version.outputs.latest_version }}-rust-${{ steps.get_rust_version.outputs.latest_version }}"
+          echo "image_tag=$image_tag" >> "$GITHUB_OUTPUT"
+          echo "Docker image tag: $image_tag"
 
       - name: Check if Docker image with the tag exists
         id: check_docker_image
         run: |
-          tag_exists=$(curl -s -o /dev/null -w "%{http_code}" https://hub.docker.com/v2/repositories/sourcescan/cargo-near/tags/${{ steps.get_cargo_near_version.outputs.latest_version }}-rust-${{ steps.get_rust_version.outputs.latest_version }})
-          if [ "$tag_exists" -eq 200 ]; then
-            echo "image_exists=true" >> $GITHUB_OUTPUT
-          else
-            echo "image_exists=false" >> $GITHUB_OUTPUT
-          fi
+          set -euo pipefail
+
+          status="$(
+            curl -sS -o /dev/null -w "%{http_code}" \
+              "https://hub.docker.com/v2/repositories/sourcescan/cargo-near/tags/${{ steps.image_tag.outputs.image_tag }}" || true
+          )"
+
+          case "$status" in
+            200)
+              echo "image_exists=true" >> "$GITHUB_OUTPUT"
+              echo "Image already exists"
+              ;;
+            404)
+              echo "image_exists=false" >> "$GITHUB_OUTPUT"
+              echo "Image does not exist yet"
+              ;;
+            *)
+              echo "Unexpected Docker Hub response: $status"
+              exit 1
+              ;;
+          esac
 
   build_and_push:
     name: Build and Push Docker Image
@@ -67,19 +120,30 @@ jobs:
     steps:
       - name: Check out the repository
         uses: actions/checkout@v4
-        with:
-          ref: main
-
-      - name: Build Docker image
-        run: docker build -t cargo-near:${{ needs.check_releases.outputs.rust_version }} --build-arg RUST_VERSION=${{ needs.check_releases.outputs.rust_version }} --build-arg CARGO_NEAR_VERSION=${{ needs.check_releases.outputs.cargo_near_version }} .
 
       - name: Log in to Docker Hub
-        uses: docker/login-action@v2
+        uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Push Docker image to Docker Hub
-        run: |
-          docker tag cargo-near:${{ needs.check_releases.outputs.rust_version }} sourcescan/cargo-near:${{ needs.check_releases.outputs.cargo_near_version }}-rust-${{ needs.check_releases.outputs.rust_version }}
-          docker push sourcescan/cargo-near:${{ needs.check_releases.outputs.cargo_near_version }}-rust-${{ needs.check_releases.outputs.rust_version }}
+      - name: Extract metadata for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: sourcescan/cargo-near
+          tags: |
+            type=raw,value=${{ needs.check_releases.outputs.image_tag }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          platforms: linux/amd64
+          push: true
+          build-args: |
+            RUST_VERSION=${{ needs.check_releases.outputs.rust_version }}
+            CARGO_NEAR_VERSION=${{ needs.check_releases.outputs.cargo_near_version }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
